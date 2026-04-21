@@ -1,3 +1,5 @@
+deployed link
+master-qr-generator-prabhakar-singh.netlify.app 
 # ⚡ QR Master Pro — Universal QR Code Generator
 
 > Har cheez ka QR banao — URL, Text, Image, File, WiFi, Contact, Email, SMS, Phone, Location, UPI Payment, aur Calendar Events!
