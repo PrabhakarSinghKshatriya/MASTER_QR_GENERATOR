@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QR Master Pro — Universal QR Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f0e8;--surface:#ebe6da;--card:#ffffff;--border:#cfc9b8;
+  --text:#1a1612;--muted:#8a7f6e;--accent:#d63030;--shadow:0 4px 28px rgba(26,22,18,0.11);--r:14px;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'DM Mono',monospace;min-height:100vh;
+  background-image:
+    radial-gradient(circle at 15% 15%,rgba(214,48,48,0.07) 0%,transparent 45%),
+    radial-gradient(circle at 85% 85%,rgba(37,99,235,0.05) 0%,transparent 45%),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(26,22,18,0.035) 39px,rgba(26,22,18,0.035) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(26,22,18,0.035) 39px,rgba(26,22,18,0.035) 40px);
+}
+.wrap{max-width:980px;margin:0 auto;padding:0 18px 60px}
+header{padding:44px 0 28px;text-align:center;animation:sd .5s ease both}
+.badge{display:inline-flex;align-items:center;gap:7px;background:var(--text);color:var(--bg);font-size:10px;letter-spacing:2.5px;padding:7px 16px;border-radius:100px;margin-bottom:24px;text-transform:uppercase}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.3s infinite}
+h1{font-family:'Syne',sans-serif;font-size:clamp(2.6rem,6.5vw,4.8rem);font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:10px}
+h1 em{font-style:normal;color:var(--accent);border-bottom:3px solid var(--accent)}
+.sub{color:var(--muted);font-size:.9rem;line-height:1.65;max-width:480px;margin:0 auto}
+.tabs{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:5px;display:flex;flex-wrap:wrap;gap:3px;margin-bottom:20px;animation:fu .5s .1s ease both}
+.tab{flex:1;min-width:72px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;border-radius:13px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;transition:all .18s;white-space:nowrap}
+.tab span{font-size:18px}
+.tab:hover{background:var(--card);color:var(--text)}
+.tab.on{background:var(--text);color:var(--bg);box-shadow:0 2px 10px rgba(26,22,18,0.18)}
+.panel{display:none;animation:fu .3s ease both}
+.panel.on{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;box-shadow:var(--shadow);margin-bottom:20px;animation:fu .5s .15s ease both}
+.slabel{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:block}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=url],input[type=email],input[type=tel],input[type=datetime-local],textarea,select{
+  width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;
+  padding:11px 13px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  outline:none;resize:vertical;transition:border-color .18s,box-shadow .18s;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--text);box-shadow:0 0 0 3px rgba(26,22,18,0.07)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.upzone{border:2px dashed var(--border);border-radius:12px;padding:36px 18px;text-align:center;cursor:pointer;transition:all .18s;background:var(--surface);position:relative}
+.upzone:hover,.upzone.drag{border-color:var(--accent);background:rgba(214,48,48,0.04)}
+.upzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upicon{font-size:36px;margin-bottom:10px;display:block}
+.uptxt strong{color:var(--text);display:block;font-size:13px;margin-bottom:3px}
+.uptxt{font-size:12px;color:var(--muted)}
+#img-preview{max-width:180px;max-height:130px;border-radius:7px;margin-top:10px;border:1px solid var(--border);display:none}
+.stylebox{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:20px}
+.stylebox h3{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.clabel{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block}
+input[type=color]{width:100%;height:42px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;padding:3px}
+input[type=range]{width:100%;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--border);outline:none;margin-top:7px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--text);cursor:pointer}
+.rrow{display:flex;justify-content:space-between;align-items:center}
+.rval{font-size:11px;color:var(--accent);font-weight:500}
+.genbt{width:100%;background:var(--text);color:var(--bg);border:none;border-radius:12px;padding:16px;font-family:'DM Mono',monospace;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:1px;transition:transform .13s,box-shadow .18s;display:flex;align-items:center;justify-content:center;gap:9px}
+.genbt:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,22,18,0.18)}
+.genbt:active{transform:translateY(0)}
+.genbt2{background:var(--surface);color:var(--text);border:1.5px solid var(--border);margin-bottom:10px}
+.genbt2:hover{background:var(--card);transform:none;box-shadow:none}
+.wsec{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.wsb{padding:7px 14px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .18s}
+.wsb.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.result{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px;box-shadow:var(--shadow);text-align:center;animation:pop .45s cubic-bezier(.34,1.56,.64,1) both}
+.result.on{display:block}
+.qrwrap{display:inline-block;background:#fff;border-radius:18px;padding:14px;box-shadow:0 18px 55px rgba(26,22,18,0.14);position:relative;margin-bottom:18px}
+.qrwrap::before,.qrwrap::after,.qrwrap .c3,.qrwrap .c4{content:'';position:absolute;width:17px;height:17px;border-color:var(--accent);border-style:solid}
+.qrwrap::before{top:-3px;left:-3px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
+.qrwrap::after{top:-3px;right:-3px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
+.qrwrap .c3{bottom:-3px;left:-3px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
+.qrwrap .c4{bottom:-3px;right:-3px;border-width:0 2px 2px 0;border-radius:0 0 3px 0}
+#qrcanvas{display:block;border-radius:6px}
+.rmeta{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:9px 13px;margin:0 auto 18px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlrow{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.dlbt{display:flex;align-items:center;gap:7px;padding:10px 20px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s}
+.dlbt:hover{border-color:var(--text);background:var(--text);color:var(--bg)}
+.dlbt.red{background:var(--accent);color:#fff;border-color:var(--accent)}
+.dlbt.red:hover{background:#b82020;color:#fff;border-color:#b82020}
+.err{display:none;color:var(--accent);font-size:11px;margin-top:-10px;margin-bottom:13px;padding:9px 13px;background:rgba(214,48,48,0.08);border-radius:7px;border-left:3px solid var(--accent)}
+.err.on{display:block}
+@keyframes sd{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{from{opacity:0;transform:scale(.87)}to{opacity:1;transform:scale(1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@media(max-width:580px){
+  .card,.result{padding:18px}.r2{grid-template-columns:1fr}h1{font-size:2.5rem}.tab{min-width:60px;font-size:9px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="badge"><span class="dot"></span>QR Master Pro</div>
+  <h1>Har Cheez ka<br><em>QR Code</em> Banao</h1>
+  <p class="sub">URL · Text · Image · WiFi · Contact · Email · SMS · Phone · Location · UPI · Event — sab ek jagah, ekdum free &amp; private.</p>
+</header>
+
+<div class="tabs">
+  <button class="tab on"  onclick="sw('url',this)"><span>🔗</span>URL</button>
+  <button class="tab"     onclick="sw('text',this)"><span>📝</span>Text</button>
+  <button class="tab"     onclick="sw('image',this)"><span>🖼️</span>Image</button>
+  <button class="tab"     onclick="sw('file',this)"><span>📁</span>File</button>
+  <button class="tab"     onclick="sw('wifi',this)"><span>📶</span>WiFi</button>
+  <button class="tab"     onclick="sw('contact',this)"><span>👤</span>Contact</button>
+  <button class="tab"     onclick="sw('email',this)"><span>✉️</span>Email</button>
+  <button class="tab"     onclick="sw('sms',this)"><span>💬</span>SMS</button>
+  <button class="tab"     onclick="sw('phone',this)"><span>📞</span>Phone</button>
+  <button class="tab"     onclick="sw('location',this)"><span>📍</span>Location</button>
+  <button class="tab"     onclick="sw('upi',this)"><span>💳</span>UPI</button>
+  <button class="tab"     onclick="sw('event',this)"><span>📅</span>Event</button>
+</div>
+
+<!-- URL -->
+<div class="panel on card" id="p-url">
+  <span class="slabel">🔗 Website / Link</span>
+  <div class="fld"><label>URL</label><input type="url" id="u-url" placeholder="https://example.com"/></div>
+  <div class="err" id="e-url">Valid URL chahiye (https:// ke saath)</div>
+  <button class="genbt" onclick="gen('url')">⚡ Generate QR</button>
+</div>
+
+<!-- TEXT -->
+<div class="panel card" id="p-text">
+  <span class="slabel">📝 Plain Text / Data</span>
+  <div class="fld"><label>Koi bhi text</label><textarea id="u-text" rows="5" placeholder="Notes, code, address, kuch bhi likho..."></textarea></div>
+  <div class="err" id="e-text">Text khali nahi ho sakta</div>
+  <button class="genbt" onclick="gen('text')">⚡ Generate QR</button>
+</div>
+
+<!-- IMAGE -->
+<div class="panel card" id="p-image">
+  <span class="slabel">🖼️ Image QR (Base64 Encoded)</span>
+  <div class="fld">
+    <label>Image Select Karo</label>
+    <div class="upzone" id="imgZone" ondragover="dov(event,'imgZone')" ondragleave="dlv('imgZone')" ondrop="dop(event)">
+      <input type="file" id="u-imgfile" accept="image/*" onchange="prevImg(this)"/>
+      <span class="upicon">🖼️</span>
+      <div class="uptxt"><strong>Click karo ya Drag &amp; Drop</strong>JPG, PNG, GIF, WebP · Max ~60KB best hai</div>
+      <img id="img-preview" src="" alt="preview"/>
+    </div>
+  </div>
+  <div class="fld"><label>Alt Text (optional)</label><input type="text" id="u-imgalt" placeholder="Image ka description"/></div>
+  <p style="font-size:11px;color:var(--muted);margin-bottom:13px">⚠️ Badi image = complex QR. 60KB se kam rakho for best scan.</p>
+  <div class="err" id="e-image">Pehle ek image select karo</div>
+  <button class="genbt" onclick="gen('image')">⚡ Generate QR</button>
+</div>
+
+<!-- FILE -->
+<div class="panel card" id="p-file">
+  <span class="slabel">📁 File / Document Link</span>
+  <div class="fld"><label>File URL (Google Drive / Dropbox / Any)</label><input type="url" id="u-furl" placeholder="https://drive.google.com/file/d/xxx"/></div>
+  <div class="fld"><label>Ya Text File ka Content</label><textarea id="u-ftext" rows="4" placeholder="Chhota text content seedha paste karo..."></textarea></div>
+  <p style="font-size:11px;color:var(--muted);margin-bottom:13px">💡 Bade files: Google Drive/Dropbox upload → share link yahan daalo</p>
+  <div class="err" id="e-file">URL ya koi content dalo</div>
+  <button class="genbt" onclick="gen('file')">⚡ Generate QR</button>
+</div>
+
+<!-- WIFI -->
+<div class="panel card" id="p-wifi">
+  <span class="slabel">📶 WiFi Network</span>
+  <div class="fld"><label>Network Name (SSID)</label><input type="text" id="u-wssid" placeholder="MyHomeWiFi"/></div>
+  <div class="fld">
+    <label>Security Type</label>
+    <div class="wsec">
+      <button class="wsb on" onclick="wset('WPA',this)">WPA/WPA2</button>
+      <button class="wsb" onclick="wset('WEP',this)">WEP</button>
+      <button class="wsb" onclick="wset('',this)">Open (No Password)</button>
+    </div>
+  </div>
+  <div class="fld" id="wpf"><label>Password</label><input type="text" id="u-wpass" placeholder="WiFi password"/></div>
+  <div class="fld"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="u-whid" style="width:auto"/>Hidden Network</label></div>
+  <div class="err" id="e-wifi">Network name (SSID) chahiye</div>
+  <button class="genbt" onclick="gen('wifi')">⚡ Generate QR</button>
+</div>
+
+<!-- CONTACT -->
+<div class="panel card" id="p-contact">
+  <span class="slabel">👤 Contact Card (vCard 3.0)</span>
+  <div class="r2">
+    <div class="fld"><label>First Name</label><input type="text" id="u-cfn" placeholder="Rahul"/></div>
+    <div class="fld"><label>Last Name</label><input type="text" id="u-cln" placeholder="Sharma"/></div>
+  </div>
+  <div class="r2">
+    <div class="fld"><label>Phone</label><input type="tel" id="u-cph" placeholder="+91 9876543210"/></div>
+    <div class="fld"><label>Mobile</label><input type="tel" id="u-cmb" placeholder="+91 9876543210"/></div>
+  </div>
+  <div class="fld"><label>Email</label><input type="email" id="u-cem" placeholder="rahul@example.com"/></div>
+  <div class="r2">
+    <div class="fld"><label>Company</label><input type="text" id="u-cco" placeholder="Acme Corp"/></div>
+    <div class="fld"><label>Job Title</label><input type="text" id="u-ctit" placeholder="Engineer"/></div>
+  </div>
+  <div class="fld"><label>Website</label><input type="url" id="u-curl" placeholder="https://rahul.dev"/></div>
+  <div class="fld"><label>Address</label><textarea id="u-cadr" rows="2" placeholder="MG Road, New Delhi"></textarea></div>
+  <div class="fld"><label>Note</label><textarea id="u-cnote" rows="2" placeholder="Bio ya koi note..."></textarea></div>
+  <div class="err" id="e-contact">Kam se kam naam ya phone chahiye</div>
+  <button class="genbt" onclick="gen('contact')">⚡ Generate QR</button>
+</div>
+
+<!-- EMAIL -->
+<div class="panel card" id="p-email">
+  <span class="slabel">✉️ Email Compose</span>
+  <div class="fld"><label>To</label><input type="email" id="u-eto" placeholder="recipient@example.com"/></div>
+  <div class="fld"><label>Subject</label><input type="text" id="u-esub" placeholder="Email subject..."/></div>
+  <div class="fld"><label>Body</label><textarea id="u-ebody" rows="5" placeholder="Email content..."></textarea></div>
+  <div class="err" id="e-email">Valid email address chahiye</div>
+  <button class="genbt" onclick="gen('email')">⚡ Generate QR</button>
+</div>
+
+<!-- SMS -->
+<div class="panel card" id="p-sms">
+  <span class="slabel">💬 SMS Message</span>
+  <div class="fld"><label>Phone Number</label><input type="tel" id="u-sph" placeholder="+91 9876543210"/></div>
+  <div class="fld"><label>Message</label><textarea id="u-smsg" rows="4" placeholder="SMS ka content..."></textarea></div>
+  <div class="err" id="e-sms">Phone number chahiye</div>
+  <button class="genbt" onclick="gen('sms')">⚡ Generate QR</button>
+</div>
+
+<!-- PHONE -->
+<div class="panel card" id="p-phone">
+  <span class="slabel">📞 Phone (Dial)</span>
+  <div class="fld"><label>Phone Number</label><input type="tel" id="u-pnum" placeholder="+91 9876543210"/></div>
+  <div class="err" id="e-phone">Phone number dalo</div>
+  <button class="genbt" onclick="gen('phone')">⚡ Generate QR</button>
+</div>
+
+<!-- LOCATION -->
+<div class="panel card" id="p-location">
+  <span class="slabel">📍 GPS Location</span>
+  <div class="r2">
+    <div class="fld"><label>Latitude</label><input type="text" id="u-llat" placeholder="28.6139"/></div>
+    <div class="fld"><label>Longitude</label><input type="text" id="u-llng" placeholder="77.2090"/></div>
+  </div>
+  <div class="fld"><label>Location Name (optional)</label><input type="text" id="u-lname" placeholder="India Gate, New Delhi"/></div>
+  <button class="genbt genbt2" onclick="getGPS()">📡 Current Location Use Karo</button>
+  <div class="err" id="e-location">Valid latitude aur longitude chahiye</div>
+  <button class="genbt" onclick="gen('location')">⚡ Generate QR</button>
+</div>
+
+<!-- UPI -->
+<div class="panel card" id="p-upi">
+  <span class="slabel">💳 UPI Payment</span>
+  <div class="fld"><label>UPI ID</label><input type="text" id="u-uid" placeholder="name@upi  ya  9876543210@paytm"/></div>
+  <div class="fld"><label>Payee Name</label><input type="text" id="u-uname" placeholder="Rahul Sharma"/></div>
+  <div class="r2">
+    <div class="fld"><label>Amount ₹ (optional)</label><input type="text" id="u-uamt" placeholder="500"/></div>
+    <div class="fld"><label>Note (optional)</label><input type="text" id="u-unote" placeholder="Payment for..."/></div>
+  </div>
+  <div class="err" id="e-upi">Valid UPI ID chahiye (xxx@xxx)</div>
+  <button class="genbt" onclick="gen('upi')">⚡ Generate QR</button>
+</div>
+
+<!-- EVENT -->
+<div class="panel card" id="p-event">
+  <span class="slabel">📅 Calendar Event (iCal)</span>
+  <div class="fld"><label>Event Title</label><input type="text" id="u-etit" placeholder="Team Meeting"/></div>
+  <div class="r2">
+    <div class="fld"><label>Start Date &amp; Time</label><input type="datetime-local" id="u-estart"/></div>
+    <div class="fld"><label>End Date &amp; Time</label><input type="datetime-local" id="u-eend"/></div>
+  </div>
+  <div class="fld"><label>Location</label><input type="text" id="u-eloc" placeholder="Conference Room B / Zoom"/></div>
+  <div class="fld"><label>Description</label><textarea id="u-edesc" rows="3" placeholder="Event details..."></textarea></div>
+  <div class="fld"><label>Organizer Email</label><input type="email" id="u-eorg" placeholder="you@example.com"/></div>
+  <div class="err" id="e-event">Event title aur start time chahiye</div>
+  <button class="genbt" onclick="gen('event')">⚡ Generate QR</button>
+</div>
+
+<!-- STYLE -->
+<div class="stylebox">
+  <h3>🎨 QR Style Customize Karo</h3>
+  <div class="sgrid">
+    <div><span class="clabel">QR Color</span><input type="color" id="s-dark" value="#000000"/></div>
+    <div><span class="clabel">Background</span><input type="color" id="s-light" value="#ffffff"/></div>
+    <div>
+      <span class="clabel">Size</span>
+      <div class="rrow"><span style="font-size:10px;color:var(--muted)">128</span><span class="rval" id="sv">256px</span><span style="font-size:10px;color:var(--muted)">512</span></div>
+      <input type="range" id="s-size" min="128" max="512" value="256" step="32" oninput="document.getElementById('sv').textContent=this.value+'px'"/>
+    </div>
+    <div>
+      <span class="clabel">Error Correction</span>
+      <select id="s-ec">
+        <option value="L">Low (7%)</option>
+        <option value="M" selected>Medium (15%)</option>
+        <option value="Q">Quartile (25%)</option>
+        <option value="H">High (30%)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="result" id="result">
+  <div class="qrwrap"><span class="c3"></span><span class="c4"></span><canvas id="qrcanvas"></canvas></div>
+  <div class="rmeta" id="rmeta"></div>
+  <div class="dlrow">
+    <button class="dlbt red" onclick="dlPNG()">⬇️ PNG Download</button>
+    <button class="dlbt" onclick="dlSVG()">📄 SVG Download</button>
+    <button class="dlbt" id="copybtn" onclick="copyImg(this)">📋 Copy Image</button>
+    <button class="dlbt" onclick="printQR()">🖨️ Print</button>
+  </div>
+</div>
+</div>
+
+<footer style="text-align:center;padding:28px 20px 44px;font-size:10px;color:var(--muted);letter-spacing:1.5px">
+  QR MASTER PRO — 100% LOCAL · ZERO SERVER · KOI DATA STORE NAHI
+</footer>
+
+<script>
+// Debug helpers: show that the main QR script loaded and report uncaught errors to console
+console.log('QR Master script loaded');
+window.addEventListener('error', e => {
+  console.error('QR Master - uncaught error:', e.message, 'at', e.filename + ':' + e.lineno + ':' + e.colno);
+});
+// ================================================================
+//  PURE JS QR CODE ENCODER — No CDN, No Dependencies
+//  Reed-Solomon ECC + QR matrix builder fully embedded
+// ================================================================
+
+// QR Math tables
+const _EXP = new Uint8Array(256);
+const _LOG = new Uint8Array(256);
+(function(){
+  for(let i=0;i<8;i++) _EXP[i]=1<<i;
+  for(let i=8;i<256;i++) _EXP[i]=_EXP[i-4]^_EXP[i-5]^_EXP[i-6]^_EXP[i-8];
+  for(let i=0;i<255;i++) _LOG[_EXP[i]]=i;
+})();
+const gexp=n=>{while(n<0)n+=255;while(n>=256)n-=255;return _EXP[n];};
+const glog=n=>{if(n<1)throw new Error('glog('+n+')');return _LOG[n];};
+
+// Polynomial
+function Poly(num,shift){
+  let o=0;while(o<num.length&&num[o]===0)o++;
+  this.d=new Array(num.length-o+shift).fill(0);
+  for(let i=0;i<num.length-o;i++) this.d[i]=num[i+o];
+}
+Poly.prototype.len=function(){return this.d.length;};
+Poly.prototype.get=function(i){return this.d[i];};
+Poly.prototype.mul=function(e){
+  const r=new Array(this.len()+e.len()-1).fill(0);
+  for(let i=0;i<this.len();i++)
+    for(let j=0;j<e.len();j++)
+      r[i+j]^=gexp(glog(this.get(i))+glog(e.get(j)));
+  return new Poly(r,0);
+};
+Poly.prototype.mod=function(e){
+  if(this.len()-e.len()<0) return this;
+  const ratio=glog(this.get(0))-glog(e.get(0));
+  const r=this.d.slice();
+  for(let i=0;i<e.len();i++) r[i]^=gexp(glog(e.get(i))+ratio);
+  return new Poly(r,0).mod(e);
+};
+
+// BCH helpers
+const G15=(1<<10)|(1<<8)|(1<<5)|(1<<4)|(1<<2)|(1<<1)|1;
+const G18=(1<<12)|(1<<11)|(1<<10)|(1<<9)|(1<<8)|(1<<5)|(1<<2)|1;
+const G15M=(1<<14)|(1<<12)|(1<<10)|(1<<4)|(1<<1);
+function bchDig(d){let n=0;while(d){n++;d>>>=1;}return n;}
+function bchTypeInfo(d){
+  let v=d<<10;
+  while(bchDig(v)-bchDig(G15)>=0) v^=(G15<<(bchDig(v)-bchDig(G15)));
+  return((d<<10)|v)^G15M;
+}
+
+// Pattern positions
+const PAT=[
+  [],
+  [6,18],[6,22],[6,26],[6,30],[6,34],
+  [6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],
+  [6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],
+  [6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],
+  [6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],
+  [6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],
+  [6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],
+  [6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],
+  [6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],
+  [6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],
+  [6,30,58,86,114,142,170]
+];
+
+// Mask functions
+const MASKS=[
+  (r,c)=>(r+c)%2===0,
+  (r)=>r%2===0,
+  (r,c)=>c%3===0,
+  (r,c)=>(r+c)%3===0,
+  (r,c)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,
+  (r,c)=>(r*c)%2+(r*c)%3===0,
+  (r,c)=>((r*c)%2+(r*c)%3)%2===0,
+  (r,c)=>((r*c)%3+(r+c)%2)%2===0
+];
+
+// RS block table [count, total, data, ...]
+const RST=[
+  [1,26,19],[1,26,16],[1,26,13],[1,26,9],
+  [1,44,34],[1,44,28],[1,44,22],[1,44,16],
+  [1,70,55],[1,70,44],[2,35,17],[2,35,13],
+  [1,100,80],[2,50,32],[2,50,24],[4,25,9],
+  [1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],
+  [2,86,68],[4,43,27],[4,43,19],[4,43,15],
+  [2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],
+  [2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],
+  [2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],
+  [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],
+  [4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],
+  [2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],
+  [4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],
+  [3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],
+  [5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],
+  [5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],
+  [1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],
+  [5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],
+  [3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],
+  [3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],
+  [4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],
+  [2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],
+  [4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],
+  [6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],
+  [17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],
+  [4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],
+  [20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],
+  [19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]
+];
+
+function getRSBlocks(tn,ec){
+  // ec: L=1,M=0,Q=3,H=2
+  const ecIdx={1:0,0:1,3:2,2:3};
+  const tbl=RST[(tn-1)*4+ecIdx[ec]];
+  const out=[];
+  for(let i=0;i<tbl.length;i+=3)
+    for(let j=0;j<tbl[i];j++)
+      out.push({total:tbl[i+1],data:tbl[i+2]});
+  return out;
+}
+
+function getECPoly(n){
+  let p=new Poly([1],0);
+  for(let i=0;i<n;i++) p=p.mul(new Poly([1,gexp(i)],0));
+  return p;
+}
+
+function lenBits(tn){
+  // byte mode (4)
+  if(tn<10) return 8;
+  if(tn<27) return 16;
+  return 16;
+}
+
+function qrEncode(text, ecLvl){
+  const ecMap={L:1,M:0,Q:3,H:2};
+  const ec=ecMap[ecLvl]||0;
+  const bytes=[];
+  const enc=new TextEncoder();
+  const u=enc.encode(text);
+  for(let i=0;i<u.length;i++) bytes.push(u[i]);
+  // Find type number
+  let tn=1;
+  for(;tn<=40;tn++){
+    const rsb=getRSBlocks(tn,ec);
+    const cap=rsb.reduce((s,b)=>s+b.data,0)*8;
+    const needed=4+lenBits(tn)+bytes.length*8;
+    if(cap>=needed) break;
+  }
+  if(tn>40) throw new Error('Data bahut bada hai QR ke liye');
+  // Bit buffer
+  const buf=[];
+  let bufLen=0;
+  function putBit(b){
+    const bi=Math.floor(bufLen/8);
+    if(buf.length<=bi) buf.push(0);
+    if(b) buf[bi]|=(0x80>>>(bufLen%8));
+    bufLen++;
+  }
+  function put(num,len){for(let i=len-1;i>=0;i--) putBit((num>>i)&1);}
+  put(4,4);
+  put(bytes.length,lenBits(tn));
+  for(let i=0;i<bytes.length;i++) put(bytes[i],8);
+  const rsb=getRSBlocks(tn,ec);
+  const total=rsb.reduce((s,b)=>s+b.data,0)*8;
+  for(let i=0;i<Math.min(4,total-bufLen);i++) putBit(0);
+  while(bufLen%8) putBit(0);
+  while(bufLen<total){put(0xEC,8);if(bufLen<total)put(0x11,8);}
+  // Data blocks
+  let off=0;
+  const dc=rsb.map(b=>{
+    const d=[];
+    for(let i=0;i<b.data;i++) d.push(buf[off++]||0);
+    return d;
+  });
+  const ec2=rsb.map((b,i)=>{
+    const ep=getECPoly(b.total-b.data);
+    const rp=new Poly(dc[i],ep.len()-1);
+    const mp=rp.mod(ep);
+    const e=[];
+    for(let j=0;j<ep.len()-1;j++){
+      const mi=j+mp.len()-(ep.len()-1);
+      e.push(mi>=0?mp.get(mi):0);
+    }
+    return e;
+  });
+  const maxDC=dc.reduce((m,b)=>Math.max(m,b.length),0);
+  const maxEC=ec2.reduce((m,b)=>Math.max(m,b.length),0);
+  const data=[];
+  for(let i=0;i<maxDC;i++) for(let r=0;r<rsb.length;r++) if(i<dc[r].length) data.push(dc[r][i]);
+  for(let i=0;i<maxEC;i++) for(let r=0;r<rsb.length;r++) if(i<ec2[r].length) data.push(ec2[r][i]);
+  // Matrix
+  const sz=tn*4+17;
+  const M=()=>Array.from({length:sz},()=>new Array(sz).fill(null));
+
+  // fix: use different var name
+  function setProbe(m,row,col){
+    for(let dr=-1;dr<=7;dr++) for(let dc2=-1;dc2<=7;dc2++){
+      if(row+dr<0||sz<=row+dr||col+dc2<0||sz<=col+dc2) continue;
+      m[row+dr][col+dc2]=(0<=dr&&dr<=6&&(dc2===0||dc2===6))||(0<=dc2&&dc2<=6&&(dr===0||dr===6))||(2<=dr&&dr<=4&&2<=dc2&&dc2<=4);
+    }
+  }
+  function setAdj(m){
+    const p=PAT[tn-1];
+    for(let i=0;i<p.length;i++) for(let j=0;j<p.length;j++){
+      if(m[p[i]][p[j]]!==null) continue;
+      for(let dr=-2;dr<=2;dr++) for(let dc2=-2;dc2<=2;dc2++)
+        m[p[i]+dr][p[j]+dc2]=(dr===-2||dr===2||dc2===-2||dc2===2||(dr===0&&dc2===0));
+    }
+  }
+  function setTiming(m){
+    for(let i=8;i<sz-8;i++){
+      if(m[i][6]===null) m[i][6]=i%2===0;
+      if(m[6][i]===null) m[6][i]=i%2===0;
+    }
+  }
+  function setInfo(m,mp){
+    const bits=bchTypeInfo((ec<<3)|mp);
+    for(let i=0;i<15;i++){
+      const mod=((bits>>i)&1)===1;
+      if(i<6) m[i][8]=mod; else if(i<8) m[i+1][8]=mod; else m[sz-15+i][8]=mod;
+      if(i<8) m[8][sz-i-1]=mod; else if(i<9) m[8][15-i]=mod; else m[8][15-i-1]=mod;
+    }
+    m[sz-8][8]=true;
+  }
+  function mapData(m,mp){
+    const mf=MASKS[mp];
+    let inc=-1,row=sz-1,bi=7,byte=0;
+    for(let col=sz-1;col>0;col-=2){
+      if(col===6) col--;
+      while(true){
+        for(let c=0;c<2;c++){
+          if(m[row][col-c]===null){
+            let dark=byte<data.length&&((data[byte]>>bi)&1)===1;
+            if(mf(row,col-c)) dark=!dark;
+            m[row][col-c]=dark;
+            bi--;if(bi===-1){byte++;bi=7;}
+          }
+        }
+        row+=inc;
+        if(row<0||sz<=row){row-=inc;inc=-inc;break;}
+      }
+    }
+  }
+  function lostPt(m){
+    let lp=0;
+    for(let r=0;r<sz;r++) for(let c=0;c<sz;c++){
+      let sc=0;const dk=m[r][c];
+      for(let dr=-1;dr<=1;dr++) for(let dc2=-1;dc2<=1;dc2++){
+        const nr=r+dr,nc=c+dc2;
+        if(nr<0||sz<=nr||nc<0||sz<=nc) continue;
+        if(m[nr][nc]===dk) sc++;
+      }
+      if(sc>5) lp+=3+sc-5;
+    }
+    for(let r=0;r<sz-1;r++) for(let c=0;c<sz-1;c++){
+      let cnt=0;
+      if(m[r][c]) cnt++;if(m[r+1][c]) cnt++;if(m[r][c+1]) cnt++;if(m[r+1][c+1]) cnt++;
+      if(cnt===0||cnt===4) lp+=3;
+    }
+    return lp;
+  }
+  // Find best mask
+  let bestM=0,minL=Infinity;
+  for(let mp=0;mp<8;mp++){
+    const tm=M();
+    setProbe(tm,0,0);setProbe(tm,sz-7,0);setProbe(tm,0,sz-7);
+    setAdj(tm);setTiming(tm);tm[sz-8][8]=true;setInfo(tm,mp);mapData(tm,mp);
+    const lp=lostPt(tm);
+    if(lp<minL){minL=lp;bestM=mp;}
+  }
+  // Final matrix
+  const fin=M();
+  setProbe(fin,0,0);setProbe(fin,sz-7,0);setProbe(fin,0,sz-7);
+  setAdj(fin);setTiming(fin);fin[sz-8][8]=true;setInfo(fin,bestM);mapData(fin,bestM);
+  return{modules:fin,size:sz};
+}
+
+// Draw QR on canvas
+function drawQR(qr,canvas,pxSize,dark,light){
+  const n=qr.size,cell=Math.floor(pxSize/n);
+  canvas.width=n*cell;canvas.height=n*cell;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle=light;ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=dark;
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++)
+    if(qr.modules[r][c]) ctx.fillRect(c*cell,r*cell,cell,cell);
+}
+
+// ================================================================
+// APP LOGIC
+// ================================================================
+let wifiSec='WPA',imgData=null,lastType=null;
+const v=id=>document.getElementById(id).value.trim();
+
+function sw(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('p-'+id).classList.add('on');
+  document.getElementById('result').classList.remove('on');
+}
+function wset(type,el){
+  wifiSec=type;
+  document.querySelectorAll('.wsb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('wpf').style.display=type===''?'none':'block';
+}
+function prevImg(inp){
+  if(!inp.files||!inp.files[0]) return;
+  const rd=new FileReader();
+  rd.onload=e=>{imgData=e.target.result;const p=document.getElementById('img-preview');p.src=imgData;p.style.display='block';};
+  rd.readAsDataURL(inp.files[0]);
+}
+function dov(e,id){e.preventDefault();document.getElementById(id).classList.add('drag');}
+function dlv(id){document.getElementById(id).classList.remove('drag');}
+function dop(e){
+  e.preventDefault();dlv('imgZone');
+  const f=e.dataTransfer.files[0];if(!f)return;
+  const inp=document.getElementById('u-imgfile');
+  const dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;prevImg(inp);
+}
+function getGPS(){
+  if(!navigator.geolocation){alert('Browser geolocation support nahi karta');return;}
+  navigator.geolocation.getCurrentPosition(
+    p=>{document.getElementById('u-llat').value=p.coords.latitude.toFixed(6);document.getElementById('u-llng').value=p.coords.longitude.toFixed(6);},
+    ()=>alert('Location denied. Manually enter karo.')
+  );
+}
+const showE=id=>document.getElementById(id).classList.add('on');
+const clearE=()=>document.querySelectorAll('.err').forEach(e=>e.classList.remove('on'));
+function isURL(s){try{const u=new URL(s);return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
+
+function buildData(type){
+  switch(type){
+    case 'url':{
+      const url=v('u-url');
+      if(!url||!isURL(url)){showE('e-url');return null;}
+      return url;
+    }
+    case 'text':{
+      const t=v('u-text');
+      if(!t){showE('e-text');return null;}
+      return t;
+    }
+    case 'image':{
+      if(!imgData){showE('e-image');return null;}
+      return imgData;
+    }
+    case 'file':{
+      const fu=v('u-furl'),fc=v('u-ftext');
+      if(!fu&&!fc){showE('e-file');return null;}
+      return fu||fc;
+    }
+    case 'wifi':{
+      const s=v('u-wssid');
+      if(!s){showE('e-wifi');return null;}
+      const h=document.getElementById('u-whid').checked?'true':'false';
+      return `WIFI:T:${wifiSec};S:${s};P:${v('u-wpass')};H:${h};;`;
+    }
+    case 'contact':{
+      const fn=v('u-cfn'),ln=v('u-cln'),ph=v('u-cph');
+      if(!fn&&!ln&&!ph){showE('e-contact');return null;}
+      return ['BEGIN:VCARD','VERSION:3.0',
+        `N:${ln};${fn};;;`,`FN:${(fn+' '+ln).trim()}`,
+        v('u-cco')?`ORG:${v('u-cco')}`:'',v('u-ctit')?`TITLE:${v('u-ctit')}`:'',
+        ph?`TEL;TYPE=WORK:${ph}`:'',v('u-cmb')?`TEL;TYPE=CELL:${v('u-cmb')}`:'',
+        v('u-cem')?`EMAIL:${v('u-cem')}`:'',v('u-curl')?`URL:${v('u-curl')}`:'',
+        v('u-cadr')?`ADR:;;${v('u-cadr')};;;;`:'',v('u-cnote')?`NOTE:${v('u-cnote')}`:'',
+        'END:VCARD'].filter(Boolean).join('\n');
+    }
+    case 'email':{
+      const to=v('u-eto');
+      if(!to||!to.includes('@')){showE('e-email');return null;}
+      let ml=`mailto:${to}`;const ep=[];
+      if(v('u-esub')) ep.push('subject='+encodeURIComponent(v('u-esub')));
+      if(v('u-ebody')) ep.push('body='+encodeURIComponent(v('u-ebody')));
+      if(ep.length) ml+='?'+ep.join('&');
+      return ml;
+    }
+    case 'sms':{
+      const p=v('u-sph');if(!p){showE('e-sms');return null;}
+      return v('u-smsg')?`smsto:${p}:${v('u-smsg')}`:`smsto:${p}`;
+    }
+    case 'phone':{
+      const p=v('u-pnum');if(!p){showE('e-phone');return null;}return `tel:${p}`;
+    }
+    case 'location':{
+      const lat=v('u-llat'),lng=v('u-llng');
+      if(!lat||!lng||isNaN(+lat)||isNaN(+lng)){showE('e-location');return null;}
+      return v('u-lname')?`geo:${lat},${lng}?q=${encodeURIComponent(v('u-lname'))}`:`geo:${lat},${lng}`;
+    }
+    case 'upi':{
+      const uid=v('u-uid');
+      if(!uid||!uid.includes('@')){showE('e-upi');return null;}
+      let u=`upi://pay?pa=${encodeURIComponent(uid)}`;
+      if(v('u-uname')) u+=`&pn=${encodeURIComponent(v('u-uname'))}`;
+      if(v('u-uamt')) u+=`&am=${encodeURIComponent(v('u-uamt'))}&cu=INR`;
+      if(v('u-unote')) u+=`&tn=${encodeURIComponent(v('u-unote'))}`;
+      return u;
+    }
+    case 'event':{
+      const tit=v('u-etit'),st=v('u-estart');
+      if(!tit||!st){showE('e-event');return null;}
+      const fd=d=>d?d.replace(/[-:T]/g,'').slice(0,15)+'Z':'';
+      return ['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+        `SUMMARY:${tit}`,`DTSTART:${fd(st)}`,
+        v('u-eend')?`DTEND:${fd(v('u-eend'))}`:'',
+        v('u-eloc')?`LOCATION:${v('u-eloc')}`:'',
+        v('u-edesc')?`DESCRIPTION:${v('u-edesc')}`:'',
+        v('u-eorg')?`ORGANIZER:mailto:${v('u-eorg')}`:'',
+        'END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\n');
+    }
+  }
+  return null;
+}
+
+function gen(type){
+  clearE();
+  const data=buildData(type);
+  if(!data) return;
+  lastType=type;
+  const size=parseInt(document.getElementById('s-size').value);
+  const ec=document.getElementById('s-ec').value;
+  const dark=document.getElementById('s-dark').value;
+  const light=document.getElementById('s-light').value;
+  const canvas=document.getElementById('qrcanvas');
+  try{
+    const qr=qrEncode(data,ec);
+    drawQR(qr,canvas,size,dark,light);
+    const meta=document.getElementById('rmeta');
+    meta.textContent=data.length>60?data.slice(0,57)+'...':data;
+    const res=document.getElementById('result');
+    res.classList.remove('on');void res.offsetWidth;res.classList.add('on');
+    setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'center'}),150);
+  }catch(err){
+    alert('QR generate nahi hua!\n\n'+err.message+'\n\nHint: Image/text bahut bada ho sakta hai. Chhota karo.');
+  }
+}
+
+function dlPNG(){
+  const c=document.getElementById('qrcanvas');
+  const a=document.createElement('a');a.download='qr-master.png';a.href=c.toDataURL('image/png');a.click();
+}
+function dlSVG(){
+  const c=document.getElementById('qrcanvas'),d=c.toDataURL('image/png'),s=c.width;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><image href="${d}" width="${s}" height="${s}"/></svg>`;
+  const a=document.createElement('a');a.download='qr-master.svg';a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));a.click();
+}
+async function copyImg(btn){
+  const c=document.getElementById('qrcanvas');
+  c.toBlob(async blob=>{
+    try{
+      await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+      const orig=btn.textContent;btn.textContent='✅ Copied!';setTimeout(()=>btn.textContent=orig,2000);
+    }catch{alert('Clipboard nahi mila. PNG download karo.');}
+  });
+}
+function printQR(){
+  const c=document.getElementById('qrcanvas');
+  const w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#fff"><img src="'+c.toDataURL()+'" style="max-width:90vmin"/></body></html>');
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},400);
+}
+
+// Live regen on style change
+['s-dark','s-light','s-size','s-ec'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{if(lastType) gen(lastType);});
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.ctrlKey&&lastType) gen(lastType);
+});
+</script>
+</body>
+</html>
